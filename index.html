@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>國考默寫App</title>
+<link rel="manifest" href="manifest.json">
+<style>
+body { font-family: -apple-system; padding: 20px; }
+button { padding: 10px; margin: 5px 0; width: 100%; }
+#question { margin: 15px 0; font-weight: bold; }
+.correct { color: black; }
+.wrong { color: red; }
+</style>
+</head>
+
+<body>
+
+<h2>國考默寫練習</h2>
+
+<button onclick="loadRandom()">隨機出題</button>
+
+<div id="subject"></div>
+<div id="question"></div>
+
+<textarea id="answer" rows="5" style="width:100%;" placeholder="請輸入默寫內容"></textarea>
+
+<button onclick="compareText()">比對</button>
+
+<div id="result"></div>
+
+<script>
+
+let questions = [];
+let currentQuestion = "";
+
+fetch('questions.json')
+.then(res => res.json())
+.then(data => questions = data);
+
+function loadRandom() {
+    const rand = Math.floor(Math.random() * questions.length);
+    const q = questions[rand];
+    currentQuestion = q.content;
+    document.getElementById("subject").innerText = "科目：" + q.subject;
+    document.getElementById("question").innerText = currentQuestion;
+    document.getElementById("answer").value = "";
+    document.getElementById("result").innerHTML = "";
+}
+
+function compareText() {
+
+    const input = document.getElementById("answer").value;
+    let output = "";
+    let correctCount = 0;
+    const maxLen = Math.max(currentQuestion.length, input.length);
+
+    for (let i = 0; i < maxLen; i++) {
+        const o = currentQuestion[i] || "";
+        const t = input[i] || "";
+
+        if (o === t) {
+            output += "<span class='correct'>" + (t || "") + "</span>";
+            correctCount++;
+        } else {
+            output += "<span class='wrong'>" + (t || "") + "</span>";
+        }
+    }
+
+    const rate = Math.round((correctCount / currentQuestion.length) * 100);
+
+    document.getElementById("result").innerHTML =
+        "<div>正確率：" + rate + "%</div><div>" + output + "</div>";
+}
+
+</script>
+
+</body>
+</html>
