@@ -3,75 +3,129 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>國考默寫App</title>
-<link rel="manifest" href="manifest.json">
+<title>國考默寫系統</title>
+
 <style>
-body { font-family: -apple-system; padding: 20px; }
-button { padding: 10px; margin: 5px 0; width: 100%; }
-#question { margin: 15px 0; font-weight: bold; }
-.correct { color: black; }
-.wrong { color: red; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #f2f2f7;
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 800px;
+    margin: auto;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+}
+
+button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    background-color: #007aff;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+.meta {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.content {
+    white-space: pre-wrap;
+    line-height: 1.6;
+}
 </style>
 </head>
 
 <body>
 
-<h2>國考默寫練習</h2>
+<div class="container">
 
-<button onclick="loadRandom()">隨機出題</button>
+<h2>📚 國考默寫系統</h2>
 
-<div id="subject"></div>
-<div id="question"></div>
+<div class="card">
+    <div id="meta" class="meta">載入中...</div>
+    <div id="question" class="content"></div>
+</div>
 
-<textarea id="answer" rows="5" style="width:100%;" placeholder="請輸入默寫內容"></textarea>
+<button onclick="randomQuestion()">🎲 隨機出題</button>
 
-<button onclick="compareText()">比對</button>
-
-<div id="result"></div>
+</div>
 
 <script>
 
-let questions = [];
-let currentQuestion = "";
+let questionBank = [];
 
-fetch('questions.json')
-.then(res => res.json())
-.then(data => questions = data);
+async function loadQuestions() {
 
-function loadRandom() {
-    const rand = Math.floor(Math.random() * questions.length);
-    const q = questions[rand];
-    currentQuestion = q.content;
-    document.getElementById("subject").innerText = "科目：" + q.subject;
-    document.getElementById("question").innerText = currentQuestion;
-    document.getElementById("answer").value = "";
-    document.getElementById("result").innerHTML = "";
-}
+    try {
 
-function compareText() {
+        const response = await fetch("questions.json");
 
-    const input = document.getElementById("answer").value;
-    let output = "";
-    let correctCount = 0;
-    const maxLen = Math.max(currentQuestion.length, input.length);
-
-    for (let i = 0; i < maxLen; i++) {
-        const o = currentQuestion[i] || "";
-        const t = input[i] || "";
-
-        if (o === t) {
-            output += "<span class='correct'>" + (t || "") + "</span>";
-            correctCount++;
-        } else {
-            output += "<span class='wrong'>" + (t || "") + "</span>";
+        if (!response.ok) {
+            throw new Error("無法讀取 questions.json");
         }
+
+        const data = await response.json();
+
+        if (!data.questions || !Array.isArray(data.questions)) {
+            throw new Error("JSON 結構錯誤");
+        }
+
+        questionBank = data.questions;
+
+        document.getElementById("meta").innerText =
+            "題庫版本：" + data.version +
+            " ｜ 題目總數：" + data.total +
+            " ｜ 更新日期：" + data.updated;
+
+    } catch (error) {
+
+        document.getElementById("meta").innerText = "載入失敗";
+        document.getElementById("question").innerText = error.message;
+        console.error(error);
+
     }
 
-    const rate = Math.round((correctCount / currentQuestion.length) * 100);
-
-    document.getElementById("result").innerHTML =
-        "<div>正確率：" + rate + "%</div><div>" + output + "</div>";
 }
+
+function randomQuestion() {
+
+    if (questionBank.length === 0) {
+        alert("題庫尚未載入完成");
+        return;
+    }
+
+    const randomIndex = Math.floor(Math.random() * questionBank.length);
+    const q = questionBank[randomIndex];
+
+    document.getElementById("meta").innerText =
+        "科目：" + q.subject +
+        " ｜ 主題：" + q.topic +
+        " ｜ 年度：" + q.year +
+        " ｜ 難度：" + q.difficulty;
+
+    document.getElementById("question").innerText = q.content;
+
+}
+
+loadQuestions();
 
 </script>
 
