@@ -91,7 +91,7 @@ function loadRandom(){
     document.getElementById("topic").innerText = currentQuestion.topic;
     document.getElementById("year").innerText = currentQuestion.year;
 
-    document.getElementById("content").innerText = currentQuestion.content;
+    document.getElementById("content").textContent = currentQuestion.content;
 
     document.getElementById("answerInput").value = "";
     document.getElementById("result").innerText = "";
