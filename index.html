@@ -13,21 +13,31 @@ body{
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     margin:20px;
 }
+
 button{
     padding:10px;
     margin:5px 0;
     width:100%;
     font-size:16px;
 }
+
 .box{
     border:1px solid #ccc;
     padding:10px;
     margin:10px 0;
-    white-space:pre-wrap;
+    white-space:pre-wrap;   /* 重要：保留空行 */
 }
+
 textarea{
     width:100%;
-    height:150px;
+    height:180px;
+    font-size:15px;
+    white-space:pre-wrap;
+}
+
+.result{
+    margin-top:10px;
+    font-weight:bold;
 }
 </style>
 </head>
@@ -50,8 +60,12 @@ textarea{
 
 <button onclick="checkAnswer()">比對答案</button>
 
+<div class="result" id="result"></div>
+
 <script>
+
 let questionsData = [];
+let currentQuestion = null;
 
 fetch("./questions.json")
 .then(res => res.json())
@@ -64,32 +78,53 @@ fetch("./questions.json")
 });
 
 function loadRandom(){
+
     if(questionsData.length === 0){
         alert("題庫尚未載入完成");
         return;
     }
 
     const randomIndex = Math.floor(Math.random() * questionsData.length);
-    const q = questionsData[randomIndex];
+    currentQuestion = questionsData[randomIndex];
 
-    document.getElementById("subject").innerText = q.subject;
-    document.getElementById("topic").innerText = q.topic;
-    document.getElementById("year").innerText = q.year;
-    document.getElementById("content").innerText = q.content;
+    document.getElementById("subject").innerText = currentQuestion.subject;
+    document.getElementById("topic").innerText = currentQuestion.topic;
+    document.getElementById("year").innerText = currentQuestion.year;
+
+    document.getElementById("content").innerText = currentQuestion.content;
 
     document.getElementById("answerInput").value = "";
+    document.getElementById("result").innerText = "";
+}
+
+function normalizeText(text){
+    return text
+        .replace(/\r\n/g, "\n")
+        .replace(/\r/g, "\n")
+        .trim();
 }
 
 function checkAnswer(){
-    const original = document.getElementById("content").innerText.trim();
-    const userInput = document.getElementById("answerInput").value.trim();
+
+    if(!currentQuestion){
+        alert("請先出題");
+        return;
+    }
+
+    const original = normalizeText(currentQuestion.content);
+    const userInput = normalizeText(document.getElementById("answerInput").value);
+
+    const resultDiv = document.getElementById("result");
 
     if(original === userInput){
-        alert("完全正確！");
+        resultDiv.innerText = "✅ 完全正確";
+        resultDiv.style.color = "green";
     }else{
-        alert("內容不完全相同，請再檢查。");
+        resultDiv.innerText = "❌ 不完全相同";
+        resultDiv.style.color = "red";
     }
 }
+
 </script>
 
 </body>
